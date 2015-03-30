@@ -14,7 +14,7 @@ encodeURIParts = (parts) ->
   encodeURIComponent parts.join ","
 
 YoutubeAdapter = DS.RESTAdapter.extend
-  key: "AIzaSyBtlHwEEjyr02QjWEHwXk9u4r_ANRRrlOk"
+  key: null
   host: "https://www.googleapis.com"
   namespace: "youtube/v3"
   defaultSerializer: '-youtube'
@@ -28,6 +28,7 @@ YoutubeAdapter = DS.RESTAdapter.extend
     [url, queryparams].join "?"
   
   generateQueryParams: (type, id, snapshot) ->
+    throw new Error "missing API key on YoutubeAdapter" unless @key
     $.param switch type
       when "youtube/channel"
         forUsername: id

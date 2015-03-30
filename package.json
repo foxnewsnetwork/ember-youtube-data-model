@@ -1,6 +1,6 @@
 {
   "name": "ember-youtube-data-model",
-  "version": "0.0.0",
+  "version": "0.0.1.beta",
   "description": "Ember Data adapters, serializers, and model for youtube api v3 (which, btw, is godawful)",
   "directories": {
     "doc": "doc",
