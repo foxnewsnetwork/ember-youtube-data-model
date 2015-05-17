@@ -1,12 +1,12 @@
+`import Ember from 'ember'`
 `import YoutubeAdapter from '../youtube'`
 
 YoutubePlaylistAdapter = YoutubeAdapter.extend
   generateQueryParams: (type, id, snapshot) ->
-    $.param 
-      playlistId: id
-      part: @partsForType type
-      fields: @fieldsForType type
-      key: @key
+    hash = @_super arguments...
+    hash.playlistId = id
+    hash.maxResults = 50
+    hash
 
   prepareType: (type) ->
     "playlistItems"

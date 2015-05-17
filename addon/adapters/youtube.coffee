@@ -1,17 +1,6 @@
 `import Ember from 'ember'`
 `import DS from 'ember-data'`
-
-map = Ember.EnumerableUtils.map
-
-stringifyHashes = (possiblyHash) ->
-  return possiblyHash if typeof possiblyHash is "string"
-  map possiblyHash, (array, key) -> "#{key}=(#{array.join ','})"
-  .join ","
-encodeURIFields = (fields) ->
-  encodeURIParts fields.map(stringifyHashes).join(",")
-encodeURIParts = (parts) ->
-  return parts if typeof parts is "string"
-  encodeURIComponent parts.join ","
+`import { lll, merge } from '../utils/hash'`
 
 YoutubeAdapter = DS.RESTAdapter.extend
   key: null
@@ -19,56 +8,56 @@ YoutubeAdapter = DS.RESTAdapter.extend
   namespace: "youtube/v3"
   defaultSerializer: '-youtube'
 
+  find: (store, type, id, snapshot) ->
+    data = @buildUrlOptions
+      typeKey: type.typeKey
+      id: id
+      snapshot: snapshot
+    uri = @buildURL type
+    @ajax uri, 'GET', data: data
+
+  findAll: (store, type, sinceToken) ->
+    data = @buildUrlOptions
+      typeKey: type.typeKey
+      sinceToken: sinceToken
+    uri = @buildURL type
+    @ajax uri, 'GET', data: data
+
+  findQuery: (store, type, query) ->
+    data = @buildUrlOptions
+      typeKey: type.typeKey
+      hash: query
+    uri = @buildURL type
+    @ajax uri, 'GET', data: data
+
   prepareType: (type) ->
     Ember.String.pluralize type.replace("youtube/", "")
 
   buildURL: (type, id, snapshot) ->
-    url = [@host, @namespace, @prepareType type].join "/"
-    queryparams = @generateQueryParams type, id, snapshot
-    [url, queryparams].join "?"
+    [@host, @namespace, @prepareType type.typeKey].join "/"
+
+  buildUrlOptions: ({typeKey, id, snapshot, sinceToken, hash}) ->
+    hash ?= {}
+    merge @generateQueryParams typeKey, id, snapshot
+    .into hash
   
   generateQueryParams: (type, id, snapshot) ->
     throw new Error "missing API key on YoutubeAdapter" unless @key
-    $.param switch type
-      when "youtube/channel"
-        forUsername: id
-        part: @partsForType type
-        fields: @fieldsForType type
-        key: @key
-      when "youtube/playlist"
-        playlistId: id
-        part: @partsForType type
-        fields: @fieldsForType type
-        key: @key
-      else throw new Error "I don't know how to handle #{type}"
+    part: @partsForType
+    fields: @fieldsForType
+    key: @key
 
   createRecord: (store, type, snapshot) ->
     throw new Error "not implemented"
 
-  fieldsForType: (type) ->
-    encodeURIFields switch type
-      when "youtube/channel"
-        [
-          item: ["contentDetails", "id", "snippet"]
-          "nextPageToken"
-          "pageInfo"
-          "prevPageToken"
-          "tokenPagination"
-        ]
-      when "youtube/playlist"
-        [
-          item: ["contentDetails", "id", "snippet"]
-          "nextPageToken"
-          "pageInfo"
-          "prevPageToken"
-          "tokenPagination"
-        ]
-      else throw new Error "I don't know the fields for #{type}"
-
-  partsForType: (type) ->
-    encodeURIParts switch type
-      when "youtube/channel" then ["id", "snippet", "contentDetails"]
-      when "youtube/playlist" then ["id", "snippet", "contentDetails"]
-      else throw new Error "I don't know what the parts are for #{type}"
+  partsForType: ["id", "snippet", "contentDetails"].join ","
+    
+  fieldsForType: [
+    "items(contentDetails,id,snippet)"
+    "nextPageToken"
+    "pageInfo"
+    "prevPageToken"
+    "tokenPagination"
+  ].join ","
 
 `export default YoutubeAdapter`
