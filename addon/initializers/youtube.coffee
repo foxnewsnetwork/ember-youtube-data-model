@@ -11,7 +11,7 @@ initialize = (ctn, app) ->
 
 YoutubeInitializer =
   name: 'youtube'
-  before: 'store'
+  before: 'ember-data'
   initialize: initialize
 
 `export {initialize}`
